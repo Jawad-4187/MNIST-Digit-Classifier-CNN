@@ -1,0 +1,129 @@
+# =====================================================================
+# FULL AI CAPSTONE PROJECT: MNIST DIGITS CLASSIFIER
+# =====================================================================
+
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
+
+# ---------------------------------------------------------------------
+# PART 1: DATA PREPROCESSING (PHASE 2)
+# ---------------------------------------------------------------------
+
+# Fix random seeds so results are always the same
+np.random.seed(42)
+tf.random.set_seed(42)
+
+# Load the handwritten digits dataset (MNIST)
+print("Loading MNIST dataset...")
+(X_full, y_full), (X_test, y_test) = keras.datasets.mnist.load_data()
+
+# Scale image pixels from [0-255] to [0-1]
+X_full, X_test = X_full / 255.0, X_test / 255.0
+
+# Add channel dimension for grayscale images
+X_full = X_full[..., None]
+X_test = X_test[..., None]
+
+# Split data into training and validation sets
+X_val, y_val = X_full[:6000], y_full[:6000]
+X_train, y_train = X_full[6000:], y_full[6000:]
+
+print(f"Data ready! Train: {X_train.shape} | Val: {X_val.shape} | Test: {X_test.shape}\n")
+
+# ---------------------------------------------------------------------
+# PART 2: BUILD & TRAIN THE CNN MODEL (PHASE 2)
+# ---------------------------------------------------------------------
+
+# Build the Neural Network structure (CNN)
+model = keras.Sequential([
+    # First layer to find basic shapes in images
+    layers.Conv2D(32, kernel_size=3, activation="relu", input_shape=(28, 28, 1)),
+    layers.MaxPooling2D(pool_size=2),
+
+    # Second layer to find complex patterns
+    layers.Conv2D(64, kernel_size=3, activation="relu"),
+    layers.MaxPooling2D(pool_size=2),
+
+    layers.Flatten(), # Change 2D image matrix to 1D vector
+    layers.Dense(64, activation="relu"), # Standard hidden layer
+    layers.Dense(10, activation="softmax") # Output layer for 10 digits (0-9)
+])
+
+# Configure the training options
+model.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+# Show model layers summary
+model.summary()
+
+# Start training the model for 5 epochs
+print("\nTraining the model now...")
+history = model.fit(
+    X_train, y_train,
+    validation_data=(X_val, y_val),
+    epochs=5,
+    batch_size=32
+)
+
+# ---------------------------------------------------------------------
+# PART 3: MODEL EVALUATION (PHASE 3)
+# ---------------------------------------------------------------------
+
+print("\nTesting the model on unseen data...")
+# Calculate final accuracy on the test set
+test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
+print("-" * 50)
+print(f"Final Test Accuracy: {test_acc * 100:.2f}%")
+print("-" * 50)
+
+# Make predictions for all test images
+y_pred_probs = model.predict(X_test)
+y_pred = np.argmax(y_pred_probs, axis=1)
+
+# Print per-digit score summary table
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+print("-" * 50)
+
+# Draw and save the Confusion Matrix plot
+print("Saving Confusion Matrix chart...")
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=list(range(10)))
+
+fig, ax = plt.subplots(figsize=(8, 8))
+disp.plot(ax=ax, cmap="Blues", values_format="d")
+plt.title("Confusion Matrix - MNIST CNN")
+plt.savefig("reports/confusion_matrix.png") # Save image inside reports folder
+plt.show()
+print("-" * 50)
+
+# Find and display 9 wrong predictions for error analysis
+print("Finding model mistakes...")
+misclassified_idx = np.where(y_test != y_pred)[0]
+
+plt.figure(figsize=(10, 10))
+for i, idx in enumerate(misclassified_idx[:9]):
+    plt.subplot(3, 3, i + 1)
+    plt.imshow(X_test[idx].reshape(28, 28), cmap="gray")
+    plt.title(f"True: {y_test[idx]} | Pred: {y_pred[idx]}", color="red")
+    plt.axis("off")
+
+plt.suptitle("Model Mistakes (Error Analysis)")
+plt.savefig("reports/error_analysis.png") # Save image inside reports folder
+plt.show()
+print("-" * 50)
+
+# ---------------------------------------------------------------------
+# PART 4: SAVE THE MODEL (PHASE 5)
+# ---------------------------------------------------------------------
+
+# Save the trained model file inside models folder
+model.save("models/mnist_cnn.h5")
+print("All Done!")
