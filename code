@@ -1,7 +1,7 @@
 # =====================================================================
 # FULL AI CAPSTONE PROJECT: MNIST DIGITS CLASSIFIER
 # =====================================================================
-
+import os
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -10,10 +10,11 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 
 # ---------------------------------------------------------------------
-# PART 1: DATA PREPROCESSING (PHASE 2)
+# PHASE 2 - DATA PREPARATION
 # ---------------------------------------------------------------------
-
-# Fix random seeds so results are always the same
+os.makedirs("models", exist_ok=True)
+os.makedirs("reports", exist_ok=True)
+# Set random seeds
 np.random.seed(42)
 tf.random.set_seed(42)
 
@@ -38,7 +39,7 @@ print(f"Data ready! Train: {X_train.shape} | Val: {X_val.shape} | Test: {X_test.
 # PART 2: BUILD & TRAIN THE CNN MODEL (PHASE 2)
 # ---------------------------------------------------------------------
 
-# Build the Neural Network structure (CNN)
+# Build CNN model
 model = keras.Sequential([
     # First layer to find basic shapes in images
     layers.Conv2D(32, kernel_size=3, activation="relu", input_shape=(28, 28, 1)),
@@ -48,7 +49,7 @@ model = keras.Sequential([
     layers.Conv2D(64, kernel_size=3, activation="relu"),
     layers.MaxPooling2D(pool_size=2),
 
-    layers.Flatten(), # Change 2D image matrix to 1D vector
+    layers.Flatten(),# Flatten features
     layers.Dense(64, activation="relu"), # Standard hidden layer
     layers.Dense(10, activation="softmax") # Output layer for 10 digits (0-9)
 ])
@@ -120,6 +121,21 @@ plt.savefig("reports/error_analysis.png") # Save image inside reports folder
 plt.show()
 print("-" * 50)
 
+# Accuracy chart
+plt.figure(figsize=(6,4))
+plt.plot(history.history["accuracy"], label="Train")
+plt.plot(history.history["val_accuracy"], label="Validation")
+plt.title("Training vs Validation Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.savefig("reports/accuracy_chart.png")
+plt.show()
+
+print("\nExperiment Table")
+print("-----------------------------")
+print("Experiment 1 | Baseline CNN | Validation Accuracy:",
+      round(max(history.history["val_accuracy"]) * 100, 2), "%")
 # ---------------------------------------------------------------------
 # PART 4: SAVE THE MODEL (PHASE 5)
 # ---------------------------------------------------------------------
