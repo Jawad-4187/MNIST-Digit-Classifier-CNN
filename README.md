@@ -8,10 +8,13 @@ This project implements a Convolutional Neural Network (CNN) to recognize handwr
 * **Validation Accuracy:** 98.93%
 
 ### 📈 Training History
-![Training Accuracy](reports/accuracy_chart.png)
+*(This chart shows how the accuracy improved during training).*
+![Training Accuracy](accuracy_chart.png)
 
 ### 📊 Confusion Matrix
-![Confusion Matrix](reports/confusion_matrix.png)
+*(This matrix displays where the model predicted correctly and where it got confused).*
+![Confusion Matrix](confusion_matrix.png)
 
 ### ❌ Error Analysis (Model Mistakes)
-![Error Analysis](reports/error_analysis.png)
+*(Here are 9 examples of handwritten digits the model incorrectly classified).*
+![Error Analysis](error_analysis.png)
